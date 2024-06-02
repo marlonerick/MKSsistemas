@@ -1,6 +1,7 @@
-"use client"
+"use client";
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+
 interface Product {
   id: string;
   name: string;
@@ -9,6 +10,7 @@ interface Product {
   quantidade: number;
   description: string;
 }
+
 export default function Home() {
   // modal
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +19,7 @@ export default function Home() {
   const [cartItems, setCartItems] = useState<Product[]>([]);
   // Contador carrinho
   const [cartCount, setCartCount] = useState(0);
-  const [total, setTotal] = useState<Number>(0);
+  const [total, setTotal] = useState<number>(0);
 
   // API produtos
   useEffect(() => {
@@ -47,19 +49,71 @@ export default function Home() {
     setIsOpen(true);
     console.log("true")
   };
+
   // Fechar modal
   const closeModal = () => {
     setIsOpen(false);
   };
+
   // Adicionar ao carrinho
   const adicionarCarrinho = (product: Product) => {
-    setCartItems([...cartItems, product]);
-    setCartCount(cartCount + 1);
+    const existingProduct = cartItems.find((item) => item.id === product.id);
 
+    if (existingProduct) {
+      incrementQuantity(product.id);
+    } else {
+      setCartItems([...cartItems, { ...product, quantidade: 1 }]);
+      setCartCount(cartCount + 1);
+      setTotal(total + product.price);
+    }
   };
+
+  // Incrementar quantidade
+  const incrementQuantity = (productId: string) => {
+    const updatedCartItems = cartItems.map((item) =>
+      item.id === productId ? { ...item, quantidade: item.quantidade + 1 } : item
+    );
+    const product = cartItems.find((item) => item.id === productId);
+    if (product) {
+      setTotal(total + product.price);
+      setCartCount(cartCount + 1);
+    }
+    setCartItems(updatedCartItems);
+  };
+
+  // Decrementar quantidade
+  const decrementQuantity = (productId: string) => {
+    const product = cartItems.find((item) => item.id === productId);
+    if (product && product.quantidade > 1) {
+      const updatedCartItems = cartItems.map((item) =>
+        item.id === productId ? { ...item, quantidade: item.quantidade - 1 } : item
+      );
+      setTotal(total - product.price);
+      setCartCount(cartCount - 1);
+      setCartItems(updatedCartItems);
+    } else if (product && product.quantidade === 1) {
+      removeFromCart(productId);
+    }
+  };
+
+  // Remover do carrinho
+  const removeFromCart = (productId: string) => {
+    const productToRemove = cartItems.find((item) => item.id === productId);
+    if (productToRemove) {
+      const updatedCartItems = cartItems.filter((item) => item.id !== productId);
+      const updatedTotal = total - (productToRemove.price * productToRemove.quantidade);
+      setTotal(updatedTotal);
+      setCartItems(updatedCartItems);
+      setCartCount(cartCount - productToRemove.quantidade);
+    }
+  };
+
+  // Calcular total
   const calcularTotal = () => {
-    const total = cartItems.reduce((total, product) => total + Number(product.price), 0);
-    return total;
+    return cartItems.reduce(
+      (total, product) => total + product.price * product.quantidade,
+      0
+    );
   };
 
   return (
@@ -90,16 +144,35 @@ export default function Home() {
                       </div>
                       <div className=" flex flex-row items-center">
                         <div className='flex flex-col '>
-                          <p>Qtd:</p>
-                          <div className='flex flex-row justify-between items-center border-2 border-gray-300 rounded-lg w- h-8 mx-2'>
-                            {/* Adicionar funções para incrementar e decrementar a quantidade */}
-                            <button className='p-1 items-center' > - </button>
-                            <button className='p-1 border-l-2 border-gray-300'> 1 </button>
-                            <button className='p-1 border-l-2 border-gray-300'> + </button>
+                          <div className=''>
+                            <div className=''>
+
+                              <form className="max-w-xs mx-auto">
+                                <label htmlFor="counter-input" className="block text-sm font-medium text-black dark:text-black">Qtd:</label>
+                                <div className="relative flex items-center text-black border-gray-300 border-2 rounded-lg p-2">
+                                  <button type="button" id="decrement-button" data-input-counter-decrement="counter-input" className="mr-1" onClick={() => decrementQuantity(product.id)}>
+                                    <svg className="w-2.5 h-2.5 text-gray-900 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16" />
+                                    </svg>
+                                  </button>
+                                  <p className='text-gray-400'>|</p>
+                                  <input type="text" id="counter-input" data-input-counter className="flex-shrink-0 text-black dark:text-dark border-l-r-2 border-gray-300 bg-transparent text-sm font-normal focus:outline-none focus:ring-0 max-w-[2.5rem] text-center" placeholder="" value={product.quantidade} readOnly />
+                                  <p className='text-gray-400'>|</p>
+                                  <button type="button" id="increment-button" data-input-counter-increment="counter-input" className="ml-1" onClick={() => incrementQuantity(product.id)}>
+                                    <svg className="w-2.5 h-2.5 text-gray-900 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
                           </div>
                         </div>
-                        <p className="font-bold">R${product.price}</p>
                       </div>
+                      <div>
+                        <p className="font-bold mr-1">R${product.price}</p>
+                      </div>
+                      <button className="text-white bg-black rounded-full w-5 h-5 relative bottom-8 left-1" onClick={() => removeFromCart(product.id)}>X</button>
                     </div>
                   ))
                 ) : (
