@@ -1,6 +1,6 @@
 "use client";
-import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import Footer from './components/footer';
 
 interface Product {
   id: string;
@@ -21,6 +21,8 @@ export default function Home() {
   const [cartCount, setCartCount] = useState(0);
   const [total, setTotal] = useState<number>(0);
 
+  const [error, setError] = useState<string | null>(null);
+
   // API produtos
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,21 +39,25 @@ export default function Home() {
         setProdutos(data.products);
         console.log('Dados carregados:', data.products);
       } catch (error) {
-        console.error(error);
+        console.log(error);
       }
     };
 
     fetchProducts();
   }, []);
 
+  if (error) {
+    return <div className='bg-red-500'>Error: {error}</div>;
+  }
+
   // Abrir modal
-  const openModal = () => {
+  const openCart = () => {
     setIsOpen(true);
     console.log("true")
   };
 
   // Fechar modal
-  const closeModal = () => {
+  const closeCart = () => {
     setIsOpen(false);
   };
 
@@ -117,24 +123,23 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen min-w-screen flex-col items-center justify-between" >
-      <nav className="flex justify-between items-center px-10 bg-[#0F52BA] w-full h-20">
-        <div className='flex flex-row'>
-          <h1 className='text-3xl font-medium mx-1'>MKS
-          </h1>
-          <h2>Sistemas</h2>
+    <main className="flex h-screen w-screen flex-col items-center justify-between max-[425px]:w-[500px] max-[425px]:h-full max-[768px]:w-screen md:w-screen md:h-screen ">
+      <nav className="flex justify-between items-center px-10 bg-[#0F52BA] w-screen h-20 max-[425px]:w-[500px] max-[768px]:w-[1000px] md:w-screen">
+        <div className='flex flex-row items-end'>
+          <h1 className='text-3xl font-medium mx-1'>MKS</h1>
+          <h2 className='font-thin'>Sistemas</h2>
         </div>
 
-        <button className="w-[90px] h-[45px] bg-white text-black rounded-md" onClick={() => openModal()}>🛒{cartCount}</button>
+        <button className="w-[90px] h-[45px] bg-white text-black rounded-md" onClick={() => openCart()}>🛒{cartCount}</button>
         {isOpen && (
           <div className="flex absolute">
-            <div className={` flex flex-col justify-between sidebar fixed right-0 top-0 h-screen bg-[#0F52BA] transition-all duration-300 shadow-lg shadow-zinc-950/60 shadow-l-2 shadow-l-[10px] -shadow-spread-2 ${isOpen ? 'w-96' : 'w-0'}`}>
+            <div className={`flex flex-col justify-between sidebar fixed right-0 top-0 h-screen bg-[#0F52BA] transition-all duration-300 shadow-lg shadow-zinc-950/60 shadow-l-2 shadow-l-[10px] ${isOpen ? 'w-96' : 'w-0'}`}>
               <div className='flex justify-between '>
-                <h1 className="text-2xl font-bold m-4 w-30 px-4">Carrinho <p>de compras</p></h1>
-                <button className="absolute top-4 right-4 text-white bg-black rounded-full w-10 h-10" onClick={closeModal}>X</button>
+                <h1 className="text-2xl font-bold m-4 w-30 px-4">Carrinho de compras</h1>
+                <button className="absolute top-4 right-4 text-white bg-black rounded-full w-10 h-10" onClick={closeCart}>X</button>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 overflow-auto ">
+              <div className="grid grid-cols-1 gap-2 overflow-auto max-[769px]:m-2">
                 {cartItems.length > 0 ? (
                   cartItems.map(product => (
                     <div key={product.id} className="flex flex-row justify-between items-center w-30 h-20 bg-white m-1 rounded-lg mx-8 text-sm text-black ">
@@ -192,7 +197,7 @@ export default function Home() {
         )}
       </nav>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 text-black px-20">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 text-black max-[425px]:w-[499px] max-[425px]:p-5">
         {produtos.length > 0 ? (
           produtos.map(product => (
             <div key={product.id} className="flex flex-col justify-between items-center shadow-xl shadow-gray-900/10 rounded-lg h-[225px] w-[225px]">
@@ -225,10 +230,7 @@ export default function Home() {
           </>
         )}
       </div>
-
-      <footer className="w-screen h-10 text-sm bg-gray-300 text-black mb-0 text-center py-2">
-        MKS sistemas © Todos direitos reservados.
-      </footer>
+      <Footer />
     </main >
   );
 }
